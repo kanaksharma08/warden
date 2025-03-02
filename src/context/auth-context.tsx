@@ -31,6 +31,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   setRole: (role: UserRole) => void;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
 }
 
 const defaultAuthState: AuthState = {
@@ -44,6 +45,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => false,
   logout: () => {},
   setRole: () => {},
+  register: async () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -101,6 +103,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    // In a real app, we would make an API call here
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Check if user already exists
+        if (MOCK_USERS[email.toLowerCase()]) {
+          resolve(false);
+          return;
+        }
+
+        // Create a new user (in a real app, this would be stored in a database)
+        const newUser: User = {
+          id: `${Object.keys(MOCK_USERS).length + 1}`,
+          name,
+          email: email.toLowerCase(),
+          role: "student", // Default role for new registrations
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff`,
+        };
+
+        // Add user to mock data (in a real app, this would be saved to a database)
+        MOCK_USERS[email.toLowerCase()] = newUser;
+        
+        // In a real application, we might automatically log the user in after registration
+        // For this demo, we'll just return success and require them to log in
+        resolve(true);
+      }, 1000);
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem("hostelsphere-user");
     setAuthState({
@@ -123,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, setRole }}>
+    <AuthContext.Provider value={{ ...authState, login, logout, setRole, register }}>
       {children}
     </AuthContext.Provider>
   );
